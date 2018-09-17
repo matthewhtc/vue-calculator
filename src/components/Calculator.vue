@@ -60,6 +60,9 @@ export default {
     },
     dot() {
       if (this.current.indexOf('.') === -1) {
+        if (!this.current.length) {
+          this.append('0');
+        }
         this.append('.');
       } 
     },
