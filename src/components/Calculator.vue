@@ -1,6 +1,8 @@
 <template>
   <div class='calculator'>
-    <div class='display'>{{ current || '0' }}</div>
+    <div class='display'>
+      <div class='miniDisplay'>{{ previous || '0' }}</div>
+      {{ current || '0' }}</div>
     <div @click='clear' class='btn'>C</div>
     <div @click='sign' class='btn'>+/-</div>
     <div @click='percent' class='btn'>%</div>
@@ -17,9 +19,9 @@
     <div @click='append("2")' class='btn'>2</div>
     <div @click='append("3")' class='btn'>3</div>
     <div @click='add' class='btn operator'>+</div>
-    <div @click='append("0")' class='zero btn'>0</div>
+    <div @click='append("0")' class='zero btn' style='border-radius: 0 0 0 5px'>0</div>
     <div @click='dot' class='btn'>.</div>
-    <div @click='equal' class='btn operator'>=</div>
+    <div @click='equal' class='btn operator' style='border-radius: 0 0 5px 0'>=</div>
   </div>
 </template>
 
@@ -28,8 +30,8 @@ export default {
   name: 'Calculator',
   data() {
     return {
-      previous: null,
-      current: '19',
+      previous: '',
+      current: '',
       operator: null,
       operatorClicked: false
     }
@@ -37,6 +39,9 @@ export default {
   methods: {
     clear() {
       this.current = '';
+      this.operatorClicked = false;
+      this.operator = null;
+      this.previous = '';
     },
     sign() {
       this.current = this.current.charAt(0) === '-' ? 
@@ -50,7 +55,7 @@ export default {
         this.current = '';
         this.operatorClicked = false;
       }
-
+      this.previous = `${this.previous}${number}`
       this.current = `${this.current}${number}` // more explicit that we are joining strings
     },
     dot() {
@@ -63,46 +68,74 @@ export default {
       this.operatorClicked = true;
     },
     divide() {
-      this.operator = (a, b) => a / b;
-      this.setPrevious();
+      if (!this.operatorClicked) {
+        this.current = `${this.current}/`;
+        this.previous = `${this.previous}/`;
+        this.setPrevious();
+      }
     },
     times() {
-      this.operator = (a, b) => a * b;
-      this.setPrevious();
+      if (!this.operatorClicked) {
+        this.current = `${this.current}*`;
+        this.previous = `${this.previous}*`;
+        this.setPrevious();
+      }
     },
     minus() {
-      this.operator = (a, b) => a - b;
-      this.setPrevious();
+      if (!this.operatorClicked) {
+        this.current = `${this.current}-`;
+        this.previous = `${this.previous}-`;
+        this.setPrevious();
+      }
     },
     add() {
-      this.operator = (a, b) => a + b;
-      this.setPrevious();
+      if (!this.operatorClicked) {
+        this.current = `${this.current}+`;
+        this.previous = `${this.previous}+`;
+        this.setPrevious();
+      }
     },
     equal() {
-      this.current = `${this.operator(
-        parseFloat(this.current),
-        parseFloat(this.previous)
-      )}`;
-      this.previous = null;
+        this.current = `${eval(this.previous)}`;
+        this.previous = `${this.previous}=${eval(this.previous)}`;
+        this.operatorClicked = false;
     }
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+$orange: #FF5722;
+
 .calculator {
-  width: 400px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  width: 350px;
   margin: 0 auto;
-  font-size: 40px;
+  font-size: 25px;
+  font-family: 'Roboto', sans-serif;
   display: grid;
   grid-template-columns: repeat(4, 1fr); // 4 x infinity grid
-  grid-auto-rows: minmax(50px, auto); // 50 px in height
+  grid-auto-rows: minmax(65px, auto); // 50 px in height
+  border-radius: 5px;
+
+  .display, .miniDisplay {
+    grid-column: 1 / 5; // start at column 1, end after column 4
+    background-color: #FFFFFF;
+    color: #212121;
+    padding: 10px;
+    text-align: right;
+    font-size: 25px;
+  }
+
+  .miniDisplay {
+    font-size: 20px;
+    padding: 0;
+    height: auto;
+  }
 
   .display {
-    grid-column: 1 / 5; // start at column 1, end after column 4
-    background-color: #333;
-    color: white;
+    border-radius: 5px 5px 0 0;
   }
 
   .zero {
@@ -110,13 +143,58 @@ export default {
   }
 
   .btn {
-    background-color: #eee;
-    border: 1px solid #999;
+      background-color: #607D8B;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    @keyframes ripple {
+    0% {
+      transform: scale(0, 0);
+      opacity: 1;
+    }
+    20% {
+      transform: scale(25, 25);
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40, 40);
+    }
+  }
+
+  .btn:after {
+    content: '';
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(96, 125, 139, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+  }
+
+  // .btn:not(:active)::after {
+  //   animation: ripple 1s ease-out;
+  // }
+  
+  .btn:hover {
+    cursor: pointer;
+    background-color: rgba(96, 125, 139, 0.8);
   }
 
   .operator {
-    background-color: orange;
-    text-color: white;
+    background-color: $orange;
+    color: white;
+  }
+
+  .operator:hover {
+    background-color: darken($orange, 10%);
   }
 }
 </style>
